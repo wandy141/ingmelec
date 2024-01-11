@@ -1,31 +1,19 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { control } from 'src/app/modelos/control';
 import { ReporteService } from 'src/app/servicios/reporte.service';
-import { DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { sector } from 'src/app/modelos/sector';
 import { DashService } from 'src/app/servicios/dash.service';
 import * as XLSX from 'xlsx';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+
 @Component({
-  selector: 'app-reportes',
-  templateUrl: './reportes.component.html',
-  styleUrls: ['./reportes.component.css'],
-  providers: [DatePipe],
+  selector: 'app-no-reporte',
+  templateUrl: './no-reporte.component.html',
+  styleUrls: ['./no-reporte.component.css'],
 })
-export class ReportesComponent implements OnInit {
-
-  @ViewChild('table', { static: false })
-  table!: ElementRef;
-
-  exportToExcel(): void {
-    const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(this.table.nativeElement);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-    XLSX.writeFile(wb, 'report.xlsx');
-  }
-
-
-
+export class NoReporteComponent implements OnInit {
   ngOnInit() {
     this.getSectores();
     this.inicializarDropdown();
@@ -64,11 +52,6 @@ export class ReportesComponent implements OnInit {
   precio_galon: number = 0;
   buscadorPlaca: string = '';
   msgBuscadorPlacaVacio: boolean = false;
-
-  kilometraje_rec: number = 0;
-  diferencia_km: number = 0;
-  kilometraje_pro: number = 0;
-
   actualizarFecha() {
     this.http.get<any>('https://worldtimeapi.org/api/ip').subscribe(
       (response) => {
@@ -87,6 +70,18 @@ export class ReportesComponent implements OnInit {
     );
   }
 
+
+  @ViewChild('table', { static: false })
+  table!: ElementRef;
+
+  exportToExcel(): void {
+    const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(this.table.nativeElement);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, 'report.xlsx');
+  }
+
+
   getSectores() {
     this.dash.getSectores().subscribe((obj) => {
       this.sectores = obj;
@@ -95,6 +90,7 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  kilometraje_rec: number = 0;
   private calcularTotales() {
     this.totalGalones = this.todoReporte.reduce(
       (total, item) => total + (item.combustible || 0),
@@ -117,17 +113,12 @@ export class ReportesComponent implements OnInit {
       (total, item) => total + (item.kilometraje_rec || 0),
       0
     );
-
-    this.kilometraje_pro = this.todoReporte.reduce(
-      (total, item) => total + (item.kilometraje_pro || 0),
-      0
-    );
-
-    this.diferencia_km = this.todoReporte.reduce(
-      (total, item) => total + (item.diferencia_km || 0),
-      0
-    );
   }
+
+
+
+
+ 
 
   inicializarDropdown() {
     // boton de brigada
@@ -218,6 +209,7 @@ export class ReportesComponent implements OnInit {
 
   selectedBrigada: number = 1;
   nombreBrigada: string = '';
+
   options: Array<any> = [];
 
   option() {
@@ -274,7 +266,7 @@ export class ReportesComponent implements OnInit {
     }
 
     this.servicio
-      .filtroReportes(
+      .filtroReportesNo(
         this.selectedBrigada,
         this.selectedOrden,
         this.selectedTiempo
@@ -288,6 +280,7 @@ export class ReportesComponent implements OnInit {
   filtrosFechas() {
     this.buscadorPlaca = '';
     this.selectedTiempo = 0;
+
     if (!this.fechaIni || !this.fechaFin) {
       this.msgFechaVacia = true;
       setTimeout(() => {
@@ -305,7 +298,7 @@ export class ReportesComponent implements OnInit {
     }
 
     this.servicio
-      .filtroReporteFechas(
+      .filtroReporteFechasNo(
         this.selectedBrigada,
         this.selectedOrden,
         this.fechaIni,
@@ -316,10 +309,12 @@ export class ReportesComponent implements OnInit {
           if (retorno) {
             this.todoReporte = retorno.resultado;
             this.calcularTotales();
-            this.nombreTiempo = `Desde: ${retorno.fechaInicio} Hasta: ${retorno.fechaFin}`;
+            this.nombreTiempo = `Desde:  ${this.formatDate(
+              retorno.fechaInicio
+            )} Hasta: ${this.formatDate(retorno.fechaFin)}`;
           }
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error en la llamada al servicio:', error);
         },
         complete: () => {},
@@ -345,7 +340,7 @@ export class ReportesComponent implements OnInit {
       }
 
       this.servicio
-        .filtroFechaPlaca(this.buscadorPlaca, 1, this.fechaIni, this.fechaFin)
+        .filtroFechaPlaca(this.buscadorPlaca, { estado1: 0, estado2: 1 }, this.fechaIni, this.fechaFin)
         .subscribe((retorno: any) => {
           this.todoReporte = retorno;
           console.log(retorno);
@@ -358,7 +353,7 @@ export class ReportesComponent implements OnInit {
         });
     } else {
       this.servicio
-        .filtroPlaca(this.buscadorPlaca, this.selectedTiempo, 1)
+        .filtroPlaca(this.buscadorPlaca, this.selectedTiempo, 0)
         .subscribe((retorno: any) => {
           this.todoReporte = retorno;
 
@@ -368,11 +363,15 @@ export class ReportesComponent implements OnInit {
     }
   }
 
-  formatDate(dateTimeString: string): string {
-    const [datePart, timePart] = dateTimeString.split(' ');
-    const [year, month, day] = datePart.split('-');
-    const [hours, minutes] = timePart.split(':');
+  formatDate(dateTimeString: string | undefined):  any{
+    if (dateTimeString === undefined) {
+        return 'Fecha no disponible';
+    }
 
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  }
+    const [datePart, timePart] = dateTimeString.split(' ');
+
+    // Resto del código
+}
+
+
 }

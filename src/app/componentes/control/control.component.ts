@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { chofer } from 'src/app/modelos/chofer';
-import { combustible } from 'src/app/modelos/combustible';
 import { control } from 'src/app/modelos/control';
+import { empleado } from 'src/app/modelos/empleado';
+import { sector } from 'src/app/modelos/sector';
 import { ControlesService } from 'src/app/servicios/controles.service';
+import { DashService } from 'src/app/servicios/dash.service';
 
 @Component({
   selector: 'app-control',
@@ -18,24 +19,24 @@ export class ControlComponent implements OnInit {
   descripcion: string = '';
   id_chofer: any = undefined;
   id_usuario: any = '';
-  idbrigada: any = undefined;
+  id_sector: number = 0;
   idPlacaSeguro: string = '';
   chasis: string = '';
   marca: string = '';
   ficha: string = '';
 
   fechah: string = '';
-  id_combustible:any = undefined;
+  id_combustible: any = undefined;
 
-
-  choferes: Array<chofer> = [];
+  choferes: Array<empleado> = [];
+  sectores: Array<sector> = [];
   buscadorChoferesTxt: string = '';
   detener: boolean = false;
+  descCombustible: string = '';
+  precioCombustible: number = 0;
+  consumoVehiculo: number = 0;
 
-  descCombustible:string = '';
-  precioCombustible:number = 0
-
-
+  noExisteChofer: boolean = false;
   msgBuscadorerr: boolean = false;
   msgError: boolean = false;
   msgExito: boolean = false;
@@ -44,50 +45,59 @@ export class ControlComponent implements OnInit {
   msgFichaMal: boolean = false;
   msgFichaNula: boolean = false;
   msgKm: boolean = false;
-  constructor(private servicio: ControlesService, private http: HttpClient) {}
+
+  constructor(private servicio: ControlesService, private http: HttpClient, private dash:DashService) {}
 
   ngOnInit() {
     this.actualizarHora();
     this.id_usuario = this.servicio.obtenerDatos();
+    this.getSectores();
+  
+  }
+
+  todoComb() {
+    this.servicio.getCombustibles().subscribe((combustibles) => {
+      const combustibleDeseado = combustibles.find(
+        (combustible) => combustible.id_combustible === this.id_combustible
+      );
+
+      if (combustibleDeseado) {
+        const descripcion = combustibleDeseado.descripcion;
+        const precioGalon = combustibleDeseado.precio_galon;
+        this.descCombustible = descripcion;
+        this.precioCombustible = precioGalon;
+      }
+    });
   }
 
 
-todoComb(){
-  
-  this.servicio.getCombustibles().subscribe((combustibles) => {
-    
 
-    const combustibleDeseado = combustibles.find(combustible => combustible.id_combustible === this.id_combustible);
+  getSectores() {
+    this.dash.getSectores().subscribe((obj) => {
+      this.sectores = obj;
+    });
+  }
 
-    if (combustibleDeseado) {
-      const descripcion = combustibleDeseado.descripcion;
-      const precioGalon = combustibleDeseado.precio_galon;
-this.descCombustible = descripcion;
-this.precioCombustible = precioGalon;
-
-    }
-
-    
-  });
-}
-
-
-
-
-  limpiar(){
-   this.placa= '';
-   this.combustible = undefined;
-   this.kilometraje = undefined;
-   this.kilometraje_act = undefined;
-   this.descripcion = '';
+  limpiar() {
+    this.placa = '';
+    this.combustible = undefined;
+    this.kilometraje = undefined;
+    this.kilometraje_act = undefined;
+    this.descripcion = '';
     this.id_chofer = undefined;
-    this.id_usuario = '';
-    this.idbrigada = undefined;
+    this.nombre_chofer = '';
+    this.id_sector = 0;
     this.idPlacaSeguro = '';
     this.chasis = '';
     this.marca = '';
     this.ficha = '';
+    this.buscadorChoferesTxt = '';
+    this.choferes = [];
   }
+recibo:string = '';
+
+
+
 
   actualizarHora() {
     this.http.get<any>('https://worldtimeapi.org/api/ip').subscribe(
@@ -104,23 +114,23 @@ this.precioCombustible = precioGalon;
   InsertarControl() {
     this.actualizarHora();
 
-
-let precio_galon = this.combustible * this.precioCombustible;
-console.log(precio_galon);
-
+    let precio_galon = this.combustible * this.precioCombustible;
+    let kilometrajeProyectado = this.combustible * this.consumoVehiculo;
     let controltemp: control = new control();
     controltemp.id_control = 0;
     controltemp.fecha = this.fechah;
     controltemp.placa = this.idPlacaSeguro;
+    controltemp.nombre_comb = this.descCombustible;
     controltemp.combustible = this.combustible;
+    controltemp.precio_combustible = this.precioCombustible;
     controltemp.precio_galon = precio_galon;
-
     controltemp.kilometraje = this.kilometraje;
     controltemp.kilometraje_act = this.kilometraje_act;
     controltemp.descripcion = this.descripcion;
     controltemp.id_chofer = this.id_chofer;
     controltemp.id_usuario = this.id_usuario;
-    controltemp.idbrigada = this.idbrigada;
+    controltemp.id_sector = this.id_sector;
+    controltemp.kilometraje_pro = kilometrajeProyectado;
 
     if (this.kilometraje_act !== undefined) {
       if (this.kilometraje > this.kilometraje_act) {
@@ -141,6 +151,14 @@ console.log(precio_galon);
     }
 
     if (this.combustible == undefined) {
+      this.msgError = true;
+      setTimeout(() => {
+        this.msgError = false;
+      }, 3000);
+      return;
+    }
+
+    if (this.id_sector == 0) {
       this.msgError = true;
       setTimeout(() => {
         this.msgError = false;
@@ -171,7 +189,7 @@ console.log(precio_galon);
       return;
     }
 
-    this.servicio.postControl(controltemp).subscribe((resultado: boolean) => {
+    this.servicio.postControl(controltemp).subscribe((resultado: any) => {
       this.actualizarHora();
       if (resultado) {
         this.msgExito = true;
@@ -180,11 +198,12 @@ console.log(precio_galon);
           this.msgExito = false;
         }, 3000);
       } else {
-        console.log('fallo');
-      }
-      try {
-      } catch (error) {
-        console.log(error);
+        console.log('fallo', resultado);
+
+        try {
+        } catch (error) {
+          console.log(error);
+        }
       }
     });
   }
@@ -213,11 +232,12 @@ console.log(precio_galon);
         this.chasis = obj.chasis;
         this.marca = obj.marca;
         this.kilometraje = obj.kilometraje;
-        this.idbrigada = obj.brigada;
+        this.id_sector = obj.id_sector;
         this.id_combustible = obj.id_tipocomb;
+        this.idPlacaSeguro = obj.placa;
+        this.consumoVehiculo = obj.consumo_vehiculo;
+
         this.todoComb();
-
-
       }
     });
   }
@@ -246,17 +266,14 @@ console.log(precio_galon);
         this.chasis = obj.chasis;
         this.marca = obj.marca;
         this.kilometraje = obj.kilometraje;
-        this.idbrigada = obj.brigada;
+        this.id_sector = obj.id_sector;
         this.id_combustible = obj.id_tipocomb;
+        this.consumoVehiculo = obj.consumo_vehiculo;
         this.todoComb();
-
       }
     });
   }
 
-
-
- 
   todoChoferes() {
     this.servicio.todoChofer().subscribe((obj) => {
       this.choferes = obj;
@@ -277,14 +294,20 @@ console.log(precio_galon);
     }
     this.detener = true;
     this.servicio.buscarResultados(termino).subscribe((obj) => {
+      if (Object.entries(obj).length === 0) {
+        this.noExisteChofer = true;
+        setTimeout(() => {
+          this.noExisteChofer = false;
+        }, 3000);
+      }
       this.choferes = obj;
     });
     this.detener = false;
   }
   nombre_chofer: string = '';
 
-  seleccionarTxt(objChofer: chofer) {
-    this.id_chofer = objChofer.id_chofer;
+  seleccionarTxt(objChofer: empleado) {
+    this.id_chofer = objChofer.id_empleado;
     this.nombre_chofer = objChofer.nombre;
   }
 }

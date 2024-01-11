@@ -7,11 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { SecundarioModule } from './secundario/secundario.module';
 import { LoginComponent } from './componentes/login/login.component';
-// import { ChartsModule } from 'ng2-charts';
+
+
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent,
+LoginComponent,
+
   ],
   imports: [
     BrowserModule,
@@ -19,7 +21,7 @@ import { LoginComponent } from './componentes/login/login.component';
     FormsModule,
     HttpClientModule,
     SecundarioModule,
-    // ChartsModule
+    
 
   ],
   providers: [],
