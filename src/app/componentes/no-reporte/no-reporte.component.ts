@@ -343,7 +343,6 @@ export class NoReporteComponent implements OnInit {
         .filtroFechaPlaca(this.buscadorPlaca, { estado1: 0, estado2: 1 }, this.fechaIni, this.fechaFin)
         .subscribe((retorno: any) => {
           this.todoReporte = retorno;
-          console.log(retorno);
 
           this.calcularTotales();
           this.nombreBrigada = this.buscadorPlaca;

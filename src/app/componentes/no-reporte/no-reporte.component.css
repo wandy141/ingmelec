@@ -1,14 +1,3 @@
-.hey{
-  
-  @media  (max-width: 900px) {
-        flex-direction: column;
-        width: 100%;
-      }
-
-
-
-
-}
 
 .logo_container img{
   box-sizing: border-box;
