@@ -6,3 +6,9 @@
     align-items: center; 
   }
 }
+
+
+/* @media (max-width: 800px) {
+  .mes {
+  width: 40%;
+} */
