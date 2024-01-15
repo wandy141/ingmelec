@@ -9,7 +9,7 @@ import { Observable, catchError, throwError } from 'rxjs';
 export class ReporteService {
 
   constructor( public http:HttpClient) { }
-  servidor = 'http://127.0.0.1:8000/api/';
+  servidor = 'http://0.0.0.0:8000/api/';
 
 
   getReporte(): Observable<Array<control>> {
