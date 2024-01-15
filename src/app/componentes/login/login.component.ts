@@ -99,7 +99,10 @@ constructor(private servicio: ControlesService, private router: Router) {
 
       });
     } catch (error) {
+      if (error)
       this.carga = false;
+    console.log(error);
+    
     }
 
   }
