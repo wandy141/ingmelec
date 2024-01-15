@@ -1,10 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { control } from '../modelos/control';
-import { Observable } from 'rxjs';
-import html2canvas from 'html2canvas';
+import { Observable, catchError, throwError } from 'rxjs';
 
-import * as pdfMake from 'pdfmake/build/pdfmake';
 @Injectable({
   providedIn: 'root'
 })
@@ -21,21 +19,21 @@ export class ReporteService {
 
 
 
-filtroReportes(idbrigada: number, orden:string,dias_anteriores:number):Observable<Array<control>> {
+filtroReportes(id_sector: number, orden:string,dias_anteriores:number):Observable<Array<control>> {
 return this.http.post<Array<control>>(this.servidor + 'filtroBrigada',{
 
-  idbrigada:idbrigada,
+  id_sector:id_sector,
   orden:orden,
   dias_anteriores:dias_anteriores,
 })
 
 }
 
-filtroReporteFechas(idbrigada: number,orden:string,fechaIni:string,fechaFin:string):Observable<Array<control>> {
+filtroReporteFechas(id_sector: number,orden:string,fechaIni:string,fechaFin:string):Observable<Array<control>> {
   
   return this.http.post<Array<control>>(this.servidor + 'filtroFecha',{
   
-    idbrigada:idbrigada,
+    id_sector:id_sector,
     orden:orden,
     fechaIni:fechaIni,
     fechaFin:fechaFin
@@ -43,34 +41,74 @@ filtroReporteFechas(idbrigada: number,orden:string,fechaIni:string,fechaFin:stri
   
   }
 
-generatePdf(elementId: string): void {
-  const element = document.getElementById(elementId);
 
-  if (element) {
-    const scaleFactor = 200.0;
 
-    const pdfDefinition: any = {
-      pageSize: 'A4',
-      pageOrientation: 'landscape',
-      content: [],
-      margin: [10, 1, 10, 20],
-    };
 
-    html2canvas(element).then((canvas) => {
-      const imgData = canvas.toDataURL('image/jpeg', 2.0);
 
-      const adjustedWidth = pdfDefinition.pageSize[1] * scaleFactor;
-      const adjustedHeight = pdfDefinition.pageSize[0] * scaleFactor;
 
-      pdfDefinition.content.push({ image: imgData, width: adjustedWidth, height: adjustedHeight });
 
-      pdfMake.createPdf(pdfDefinition).download('reporte.pdf');
-    });
-  } else {
-    console.error(`Element with ID '${elementId}' not found.`);
+
+filtroReportesNo(id_sector: number, orden:string,dias_anteriores:number):Observable<Array<control>> {
+  return this.http.post<Array<control>>(this.servidor + 'filtroBrigadano',{
+  
+    id_sector:id_sector,
+    orden:orden,
+    dias_anteriores:dias_anteriores,
+  })
+  
   }
-}
+  
+  filtroReporteFechasNo(id_sector: number,orden:string,fechaIni:string,fechaFin:string):Observable<Array<control>> {
+    
+    return this.http.post<Array<control>>(this.servidor + 'filtroFechano',{
+    
+      id_sector:id_sector,
+      orden:orden,
+      fechaIni:fechaIni,
+      fechaFin:fechaFin
+    })
+    
+    }
 
+
+
+    filtroPlaca(placaVehiculo: string, diasAnteriores: number, estado: number): Observable<Array<control>> {
+      
+      const requestBody = {
+        placa: placaVehiculo,
+        dias_anteriores: diasAnteriores,
+        estado: estado
+      };
+    
+      return this.http.post<Array<control>>(`${this.servidor}filtroPlaca`, requestBody)
+        .pipe(
+          catchError(error => {
+            console.error('Error en la solicitud HTTP:', error);
+            return throwError('Error en la solicitud HTTP');
+          })
+        );
+    }
+    
+
+    filtroFechaPlaca(placaVehiculo: string, estado: any,fechaIni:string,fechaFin:string): Observable<Array<control>> {
+      console.log(fechaIni,fechaFin);
+      
+      const requestBody = {
+        placa: placaVehiculo,
+        estado: estado,
+        fechaInicio: fechaIni,
+        fechaFin: fechaFin
+      };
+    
+      return this.http.post<Array<control>>(`${this.servidor}filtroFechaPlaca`, requestBody)
+        .pipe(
+          catchError(error => {
+            console.error('Error en la solicitud HTTP:', error);
+            return throwError('Error en la solicitud HTTP');
+          })
+        );
+    }
+    
 
 
 }

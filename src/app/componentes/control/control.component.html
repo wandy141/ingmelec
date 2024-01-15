@@ -389,22 +389,19 @@ class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-70
       </div> -->
 
       
-      <div hidden>
-        <label
-          for="brigada"
-          class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left"
-          >brigada</label
-        >
-        <input
-          id="brigada"
-          name="brigada"
-          type="number"
-          class="bg-gray-200 border border-gray-500 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          placeholder=" brigada"
-          [(ngModel)]="idbrigada"
-         disabled
-        />
-      </div>
+      <form>
+        <div>
+          <label for="consumo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
+  Sector:</label>
+          <select id="consumo" name="consumo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"  [(ngModel)]="id_sector">
+            <option selected disabled value= 0>Selecciona un sector</option>
+            <option *ngFor="let item of sectores " [value]="item.id_sector">{{item.nombre_sec }}</option>
+          </select>
+        </div>
+      </form>
+
+
+  
 
       <div class="">
         <label
@@ -501,6 +498,13 @@ role="alert"
 >
 <span class="font-medium">Atencion!</span> Llene el campo.
 </div>
+<div
+class="p-2 w-full text-sm mt-1 mb-2 text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+role="alert"
+*ngIf="noExisteChofer"
+>
+<span class="font-medium">Atencion!</span> No existe ese chofer.
+</div>
 </div>
 
 
@@ -513,7 +517,7 @@ role="alert"
                     Nombre
                 </th>
                 <th scope="col" class="px-2 py-1 text-center">
-                   Descripcion
+                   cedula
                 </th>
             
             </tr>
@@ -526,7 +530,7 @@ role="alert"
                   {{item.nombre}}
                 </td>
                 <td class="px-2 py-1 text-center" (click)="seleccionarTxt(item)" data-bs-dismiss="modal" aria-label="Close">
-                  {{item.descripcion}}
+                  {{item.cedula}}
                 </td>
                
             </tr>

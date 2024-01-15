@@ -62,17 +62,25 @@ constructor(private servicio: ControlesService, private router: Router) {
       .login(this.usuario, this.password)
       .subscribe((retorno: any) => {
         
-          
+          if(retorno.rol != 0){
+
        
         if (retorno.resultado == true) {
           localStorage.setItem('usuario', retorno.id_usuario);
-         
-          
-            if (retorno.rol == 1) {
-               this.router.navigate(['side/control']);
-            } 
-         
-        } else {
+          this.servicio.setRol(retorno.rol);
+          if (retorno.rol != 2) {
+            this.router.navigate(['side/dash']);
+            
+          }else{
+            this.router.navigate(['side/control']);
+
+          }
+              }
+
+              
+
+
+         else {
           this.carga = false;
           this.acceder = true;
           this.msgError = true;
@@ -80,6 +88,15 @@ constructor(private servicio: ControlesService, private router: Router) {
             this.msgError = false;
           }, 3000);
         }
+      } else {
+        this.carga = false;
+        this.acceder = true;
+        this.msgError = true;
+        setTimeout(() => {
+          this.msgError = false;
+        }, 3000);
+      }
+
       });
     } catch (error) {
       if (error)
@@ -87,5 +104,10 @@ constructor(private servicio: ControlesService, private router: Router) {
     console.log(error);
     
     }
+
   }
+
+
+ 
+
 }

@@ -5,8 +5,9 @@ export class vehiculos {
     ano:number;
     marca:string;
     id_tipocomb:number;
+    consumo_vehiculo:number;
     kilometraje;
-    brigada:number;
+    id_sector:number;
     seguro:string;
     polisa:string;
     estado:number;
@@ -18,8 +19,9 @@ export class vehiculos {
             this.ano = 0;
             this.marca = '';
             this.id_tipocomb = 0;
+            this.consumo_vehiculo = 0;
             this.kilometraje = 0;
-            this.brigada = 0;
+            this.id_sector = 0;
             this.seguro = '';
             this.polisa = '';
             this.estado = 0;

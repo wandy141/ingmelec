@@ -45,4 +45,10 @@
   .check{
     width: 20.5rem;
   }
+  @media print {
+    .hey {
+      display: none;
+    }
+  
+  }
   
